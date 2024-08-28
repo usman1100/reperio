@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/usman1100/reperio/utils"
 )
 
 func ScanPort(hostname string, port int) {
@@ -23,12 +25,19 @@ func ScanPort(hostname string, port int) {
 }
 
 func main() {
-	hostname := "scanme.nmap.org"
-	portsToScan := [6]int{9090, 5432, 80, 443, 22, 8080}
+	host := flag.String("host", "localhost", "hostname to scan")
+	ports := flag.String("ports", "80,443,22,8080", "comma separated list of ports to scan")
+	flag.Usage = func() {
+		fmt.Println("Usage: reperio -host <hostname> -ports <ports>")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
 
-	color.Yellow("Scanning ports on %s\n", hostname)
+	portsToScan := utils.ParsePortsFromArgs(*ports)
+
+	color.Yellow("Scanning ports on %s\n", *host)
 
 	for _, port := range portsToScan {
-		ScanPort(hostname, port)
+		ScanPort(*host, port)
 	}
 }
