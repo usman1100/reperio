@@ -4,13 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/usman1100/reperio/utils"
 )
 
-func ScanPort(hostname string, port int) {
+func ScanPort(wg *sync.WaitGroup, hostname string, port int) {
+	defer wg.Done()
 	address := fmt.Sprintf("%s:%d", hostname, port)
 	conn, err := net.DialTimeout("tcp", address, time.Second*5)
 	if err != nil {
@@ -33,11 +35,16 @@ func main() {
 	}
 	flag.Parse()
 
+	var wg sync.WaitGroup
+
 	portsToScan := utils.ParsePortsFromArgs(*ports)
 
 	color.Yellow("Scanning ports on %s\n", *host)
 
 	for _, port := range portsToScan {
-		ScanPort(*host, port)
+		wg.Add(1)
+		go ScanPort(&wg, *host, port)
 	}
+
+	wg.Wait()
 }
